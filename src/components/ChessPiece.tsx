@@ -29,7 +29,13 @@ export const ChessPiece: FC<ChessPieceProps> = ({ team, type }) => {
 
 function getChessPiece(team: Teams, type: PieceTypes): JSX.Element {
   const pieceColor = team === 'black' ? 'black' : 'white';
-  const props = { fill: pieceColor, style: { display: 'block' } };
+  const pieceBordercolor = team === 'black' ? 'white' : 'black';
+  const props = {
+    fill: pieceColor,
+    stroke: pieceBordercolor,
+    strokeWidth: 2,
+    style: { display: 'block' }
+  };
 
   switch (type) {
     case PieceTypes.K:

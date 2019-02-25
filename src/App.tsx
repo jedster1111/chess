@@ -2,7 +2,6 @@ import React, { FC, useState } from 'react';
 import { ChessBoard, PieceData } from './components/ChessBoard';
 import styled from 'styled-components';
 import { A } from './components/styled/A';
-import { ChessPiece } from './components/ChessPiece';
 import { PieceTypes } from './types';
 
 const StyledApp = styled.div`
@@ -36,14 +35,15 @@ const StyledFooter = styled.footer`
 
 const App: FC = props => {
   const [piecesData] = useState<PieceData[]>([
-    { position: { x: 1, y: 1 }, type: PieceTypes.K, team: 'black' }
+    { position: { x: 2, y: 1 }, type: PieceTypes.K, team: 'black' },
+    { position: { x: 4, y: 8 }, type: PieceTypes.Q, team: 'white' }
   ]);
   return (
     <StyledApp>
       <StyledAppMain>
         <p>Chess?</p>
         <ChessBoard pieces={piecesData} />
-        <ChessPiece team='white' type={PieceTypes.R} />
+        {/* <ChessPiece team='white' type={PieceTypes.R} /> */}
       </StyledAppMain>
       <StyledFooter>
         Icons made by{' '}
