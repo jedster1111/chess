@@ -1,0 +1,21 @@
+{
+    "defaultSeverity": "error",
+    "extends": ["tslint:recommended", "tslint-react", "tslint-config-prettier"],
+    "rules": {
+      "prettier": [true, { "singleQuote": true, "jsxSingleQuote": true }],
+      "file-name-casing": [true, {".tsx": "pascal-case", ".ts": "camel-case"}],
+      "interface-name": false,
+      "no-empty-interface": false,
+      "member-access": false,
+      "object-literal-sort-keys": false,
+      "semicolon": [true, "always", "ignore-bound-class-methods"],
+      "no-any": true,
+      "ordered-imports": false
+      // "quotemark": [
+      //   true,
+      //   "single",
+      //   "avoid-escape"
+      // ]
+    },
+    "rulesDirectory": ["tslint-plugin-prettier"]
+}  
