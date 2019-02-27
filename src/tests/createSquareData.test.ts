@@ -1,29 +1,25 @@
-import {
-  SquareData,
-  createSquareData,
-  PieceData
-} from '../components/ChessBoard';
-import { PieceTypes } from '../types';
+import { SquareData, createSquareData, PieceData } from '../components/ChessBoard';
+import { createVector } from '../helpers/vector';
 
 const createWhiteFirstRow: () => SquareData[] = () => [
-  { bgColor: 'white' },
-  { bgColor: 'black' },
-  { bgColor: 'white' },
-  { bgColor: 'black' },
-  { bgColor: 'white' },
-  { bgColor: 'black' },
-  { bgColor: 'white' },
-  { bgColor: 'black' }
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false }
 ];
 const createBlackFirstRow: () => SquareData[] = () => [
-  { bgColor: 'black' },
-  { bgColor: 'white' },
-  { bgColor: 'black' },
-  { bgColor: 'white' },
-  { bgColor: 'black' },
-  { bgColor: 'white' },
-  { bgColor: 'black' },
-  { bgColor: 'white' }
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false }
 ];
 
 const createEmptyBoardData: () => SquareData[][] = () => [
@@ -44,12 +40,17 @@ it('should return an empty chess board', () => {
 });
 
 it('should add pieces to board', () => {
-  const piecesData: PieceData[] = [
-    { position: { x: 1, y: 1 }, type: PieceTypes.B, team: 'white' }
-  ];
+  const piecesData: PieceData[] = [{ position: { x: 1, y: 1 }, type: 'bishop', team: 'white', hasMoved: false }];
 
   const result = createEmptyBoardData();
-  result[1][1].pieceData = { type: PieceTypes.B, team: 'white' };
+  const squareData: SquareData = {
+    pieceData: { type: 'bishop', team: 'white', position: createVector(1, 1), hasMoved: false },
+    isValidMoveSquare: false,
+    bgColor: 'white',
+    isEnemyPieceInSquare: false,
+    isSelectedSquare: false
+  };
+  result[0][0] = squareData;
 
   expect(createSquareData(piecesData)).toEqual(result);
 });

@@ -14,17 +14,16 @@ interface ChessPieceProps {
   type: PieceTypes;
 }
 
-const StyledChessPieceWrapper = styled.div`
+const StyledChessPieceWrapper = styled.div<{ pieceType: PieceTypes }>`
   display: block;
 
-  width: 50px;
-  /* height: 50px; */
+  width: ${({ pieceType }) => (pieceType === 'pawn' ? '70%' : '100%')};
 `;
 
 export const ChessPiece: FC<ChessPieceProps> = ({ team, type }) => {
   const chessPiece = getChessPiece(team, type);
 
-  return <StyledChessPieceWrapper>{chessPiece}</StyledChessPieceWrapper>;
+  return <StyledChessPieceWrapper pieceType={type}>{chessPiece}</StyledChessPieceWrapper>;
 };
 
 function getChessPiece(team: Teams, type: PieceTypes): JSX.Element {
@@ -33,22 +32,22 @@ function getChessPiece(team: Teams, type: PieceTypes): JSX.Element {
   const props = {
     fill: pieceColor,
     stroke: pieceBordercolor,
-    strokeWidth: 2,
+    strokeWidth: 5,
     style: { display: 'block' }
   };
 
   switch (type) {
-    case PieceTypes.K:
+    case 'king':
       return <King {...props} />;
-    case PieceTypes.Q:
+    case 'queen':
       return <Queen {...props} />;
-    case PieceTypes.B:
+    case 'bishop':
       return <Bishop {...props} />;
-    case PieceTypes.N:
+    case 'knight':
       return <Knight {...props} />;
-    case PieceTypes.R:
+    case 'rook':
       return <Rook {...props} />;
-    case PieceTypes.P:
+    case 'pawn':
       return <Pawn {...props} />;
   }
 }

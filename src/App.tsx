@@ -1,8 +1,8 @@
 import React, { FC, useState } from 'react';
-import { ChessBoard, PieceData } from './components/ChessBoard';
+import { ChessBoard, PieceData, Teams } from './components/ChessBoard';
 import styled from 'styled-components';
-import { A } from './components/styled/A';
-import { PieceTypes } from './types';
+import { createInitialPiecePositions } from './helpers/createInitialPiecePositions';
+import { Credit } from './components/Credit';
 
 const StyledApp = styled.div`
   display: flex;
@@ -34,34 +34,39 @@ const StyledFooter = styled.footer`
 `;
 
 const App: FC = props => {
-  const [piecesData] = useState<PieceData[]>([
-    { position: { x: 2, y: 1 }, type: PieceTypes.K, team: 'black' },
-    { position: { x: 4, y: 8 }, type: PieceTypes.Q, team: 'white' }
-  ]);
+  const [whitePiecesData] = useState<PieceData[]>(createInitialPiecePositions('bottom', 'white'));
+
+  const [blackPiecesData] = useState<PieceData[]>(createInitialPiecePositions('top', 'black'));
+
+  const [selectedPiece, setSelectedPiece] = useState<PieceData | undefined>(
+    whitePiecesData.find(piece => piece.type === 'knight') || whitePiecesData[0]
+  );
+
+  const [currentPlayersTurn] = useState<Teams>('white');
+
+  const handleSetSelectedPiece = (newSelectedPiece: PieceData | undefined): void => {
+    if (newSelectedPiece && newSelectedPiece.team === currentPlayersTurn) {
+      setSelectedPiece(newSelectedPiece);
+    } else {
+      setSelectedPiece(undefined);
+    }
+  };
+
   return (
     <StyledApp>
       <StyledAppMain>
         <p>Chess?</p>
-        <ChessBoard pieces={piecesData} />
-        {/* <ChessPiece team='white' type={PieceTypes.R} /> */}
+        <ChessBoard
+          whitePieces={whitePiecesData}
+          blackPieces={blackPiecesData}
+          currentPlayersTurn={currentPlayersTurn}
+          whiteSideOfBoard='bottom'
+          selectedPiece={selectedPiece}
+          setSelectedPiece={handleSetSelectedPiece}
+        />
       </StyledAppMain>
       <StyledFooter>
-        Icons made by{' '}
-        <A href='http://www.freepik.com/' title='Freepik'>
-          Freepik
-        </A>{' '}
-        from{' '}
-        <A href='https://www.flaticon.com/' title='Flaticon'>
-          www.flaticon.com
-        </A>{' '}
-        is licensed by{' '}
-        <A
-          href='http://creativecommons.org/licenses/by/3.0/'
-          title='Creative Commons BY 3.0'
-          target='_blank'
-        >
-          CC 3.0 BY
-        </A>
+        <Credit />
       </StyledFooter>
     </StyledApp>
   );
