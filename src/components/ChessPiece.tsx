@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Teams } from './ChessBoard';
+import { Teams } from './ChessBoard/ChessBoard';
 import { PieceTypes } from '../types';
 import { ReactComponent as King } from '../chess_svg/king.svg';
 import { ReactComponent as Queen } from '../chess_svg/queen.svg';
@@ -23,7 +23,11 @@ const StyledChessPieceWrapper = styled.div<{ pieceType: PieceTypes }>`
 export const ChessPiece: FC<ChessPieceProps> = ({ team, type }) => {
   const chessPiece = getChessPiece(team, type);
 
-  return <StyledChessPieceWrapper pieceType={type}>{chessPiece}</StyledChessPieceWrapper>;
+  return (
+    <StyledChessPieceWrapper pieceType={type} draggable={true}>
+      {chessPiece}
+    </StyledChessPieceWrapper>
+  );
 };
 
 function getChessPiece(team: Teams, type: PieceTypes): JSX.Element {
@@ -33,7 +37,7 @@ function getChessPiece(team: Teams, type: PieceTypes): JSX.Element {
     fill: pieceColor,
     stroke: pieceBordercolor,
     strokeWidth: 5,
-    style: { display: 'block' }
+    style: { display: 'block' },
   };
 
   switch (type) {

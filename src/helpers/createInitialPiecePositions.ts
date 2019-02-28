@@ -1,4 +1,4 @@
-import { PieceData, Teams } from '../components/ChessBoard';
+import { PieceData, Teams } from '../components/ChessBoard/ChessBoard';
 import { SideOfBoard } from '../types';
 
 export function createInitialPiecePositions(sideOfBoard: SideOfBoard, team: Teams): PieceData[] {
@@ -7,43 +7,43 @@ export function createInitialPiecePositions(sideOfBoard: SideOfBoard, team: Team
       position: sideOfBoard === 'top' ? { x: 1, y: 1 } : { x: 1, y: 8 },
       type: 'rook',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     {
       position: sideOfBoard === 'top' ? { x: 2, y: 1 } : { x: 2, y: 8 },
       type: 'knight',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     {
       position: sideOfBoard === 'top' ? { x: 3, y: 1 } : { x: 3, y: 8 },
       type: 'bishop',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     {
       position: sideOfBoard === 'top' ? { x: 4, y: 1 } : { x: 4, y: 8 },
       type: team === 'white' ? (sideOfBoard === 'top' ? 'king' : 'queen') : sideOfBoard === 'top' ? 'queen' : 'king',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     {
       position: sideOfBoard === 'top' ? { x: 5, y: 1 } : { x: 5, y: 8 },
       type: team === 'white' ? (sideOfBoard === 'top' ? 'queen' : 'king') : sideOfBoard === 'top' ? 'king' : 'queen',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     {
       position: sideOfBoard === 'top' ? { x: 6, y: 1 } : { x: 6, y: 8 },
       type: 'bishop',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     {
       position: sideOfBoard === 'top' ? { x: 8, y: 6 } : { x: 7, y: 8 },
       type: 'knight',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     // {
     //   position: sideOfBoard === 'top' ? { x: 8, y: 1 } : { x: 8, y: 8 },
@@ -91,13 +91,13 @@ export function createInitialPiecePositions(sideOfBoard: SideOfBoard, team: Team
       position: sideOfBoard === 'top' ? { x: 7, y: 2 } : { x: 7, y: 7 },
       type: 'pawn',
       team,
-      hasMoved: false
+      hasMoved: false,
     },
     {
       position: sideOfBoard === 'top' ? { x: 8, y: 2 } : { x: 8, y: 7 },
       type: 'pawn',
       team,
-      hasMoved: false
-    }
+      hasMoved: false,
+    },
   ];
 }

@@ -2,7 +2,7 @@
     "defaultSeverity": "error",
     "extends": ["tslint:recommended", "tslint-react", "tslint-config-prettier"],
     "rules": {
-      "prettier": [true, { "singleQuote": true, "jsxSingleQuote": true, "printWidth": 120 }],
+      "prettier": [true, { "singleQuote": true, "jsxSingleQuote": true, "printWidth": 120, "trailingComma": "all" }],
       "file-name-casing": [true, {".tsx": "pascal-case", ".ts": "camel-case"}],
       "interface-name": false,
       "no-empty-interface": false,

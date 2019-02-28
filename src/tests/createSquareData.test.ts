@@ -1,4 +1,5 @@
-import { SquareData, createSquareData, PieceData } from '../components/ChessBoard';
+import { SquareData, PieceData } from '../components/ChessBoard/ChessBoard';
+import { createSquareData } from '../components/ChessBoard/createSquareData';
 import { createVector } from '../helpers/vector';
 
 const createWhiteFirstRow: () => SquareData[] = () => [
@@ -9,7 +10,7 @@ const createWhiteFirstRow: () => SquareData[] = () => [
   { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
   { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
   { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
-  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false }
+  { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
 ];
 const createBlackFirstRow: () => SquareData[] = () => [
   { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
@@ -19,7 +20,7 @@ const createBlackFirstRow: () => SquareData[] = () => [
   { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
   { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
   { bgColor: 'black', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
-  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false }
+  { bgColor: 'white', isEnemyPieceInSquare: false, isSelectedSquare: false, isValidMoveSquare: false },
 ];
 
 const createEmptyBoardData: () => SquareData[][] = () => [
@@ -30,7 +31,7 @@ const createEmptyBoardData: () => SquareData[][] = () => [
   createWhiteFirstRow(),
   createBlackFirstRow(),
   createWhiteFirstRow(),
-  createBlackFirstRow()
+  createBlackFirstRow(),
 ];
 
 it('should return an empty chess board', () => {
@@ -48,7 +49,7 @@ it('should add pieces to board', () => {
     isValidMoveSquare: false,
     bgColor: 'white',
     isEnemyPieceInSquare: false,
-    isSelectedSquare: false
+    isSelectedSquare: false,
   };
   result[0][0] = squareData;
 

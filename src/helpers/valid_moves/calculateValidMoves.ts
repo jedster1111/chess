@@ -1,19 +1,15 @@
 import { Vector, PieceTypes, SideOfBoard } from '../../types';
-import { PieceData, Teams } from '../../components/ChessBoard';
-import { applyVector, areVectorsEqual, createVector } from '../vector';
-
-interface GameData {
-  pieces: { white: PieceData[]; black: PieceData[] };
-  currentPlayersTurn: Teams;
-  whiteSideOfBoard: SideOfBoard;
-}
+import { PieceData } from '../../components/ChessBoard/ChessBoard';
+import { createVector, applyVector, checkIsVectorInsideBoard } from '../vector';
+import { GameData } from '../../App';
+import { checkIsPieceInSquare } from '../checkIsPieceInSquare';
 
 export interface ValidMoveData {
   position: Vector;
   isEnemyPieceInSquare: boolean;
 }
 
-interface PieceMoveRule {
+export interface PieceMoveRule {
   vectors: Vector[];
   canMoveMultiple: boolean;
 }
@@ -31,13 +27,13 @@ function createPieceMoveRules(sideOfBoard: SideOfBoard): PieceMoveRules {
         createVector(0, -1),
         createVector(-1, -1),
         createVector(-1, 0),
-        createVector(-1, 1)
+        createVector(-1, 1),
       ],
-      canMoveMultiple: false
+      canMoveMultiple: false,
     },
     bishop: {
       vectors: [createVector(1, 1), createVector(1, -1), createVector(-1, -1), createVector(-1, 1)],
-      canMoveMultiple: true
+      canMoveMultiple: true,
     },
     knight: {
       vectors: [
@@ -48,13 +44,13 @@ function createPieceMoveRules(sideOfBoard: SideOfBoard): PieceMoveRules {
         createVector(-1, -2),
         createVector(-2, -1),
         createVector(-2, 1),
-        createVector(-1, 2)
+        createVector(-1, 2),
       ],
-      canMoveMultiple: false
+      canMoveMultiple: false,
     },
     pawn: {
       vectors: sideOfBoard === 'bottom' ? [createVector(0, -1)] : [createVector(0, 1)],
-      canMoveMultiple: false
+      canMoveMultiple: false,
     },
     queen: {
       vectors: [
@@ -65,54 +61,44 @@ function createPieceMoveRules(sideOfBoard: SideOfBoard): PieceMoveRules {
         createVector(0, -1),
         createVector(-1, -1),
         createVector(-1, 0),
-        createVector(-1, 1)
+        createVector(-1, 1),
       ],
-      canMoveMultiple: true
+      canMoveMultiple: true,
     },
     rook: {
       vectors: [createVector(0, 1), createVector(1, 0), createVector(0, -1), createVector(-1, 0)],
-      canMoveMultiple: true
-    }
+      canMoveMultiple: true,
+    },
   };
 }
 
 export function calculateValidMoves(pieceToMove: PieceData, gameData: GameData): ValidMoveData[] | undefined {
-  const validMoves: ValidMoveData[] = [];
-
-  const sideOfBoard =
-    pieceToMove.team === 'white' ? gameData.whiteSideOfBoard : gameData.whiteSideOfBoard === 'top' ? 'bottom' : 'top';
-
+  const sideOfBoard = pieceToMove.team === 'white' ? gameData.whiteSideOfBoard : gameData.blackSideOfBoard;
   const pieceMoveRules = createPieceMoveRules(sideOfBoard);
+  const oppositeTeam = pieceToMove.team === 'black' ? 'white' : 'black';
+
+  const pieceMoveRule = pieceMoveRules[pieceToMove.type];
 
   if (pieceToMove.team !== gameData.currentPlayersTurn) {
     return;
   }
 
-  validMoves.push(...calculateValidMovesForPiece(pieceMoveRules[pieceToMove.type], pieceToMove, gameData, sideOfBoard));
-
-  return validMoves;
-}
-
-function calculateValidMovesForPiece(
-  pieceMoveRule: PieceMoveRule,
-  pieceToMove: PieceData,
-  gameData: GameData,
-  sideofBoard: SideOfBoard
-): ValidMoveData[] {
-  const oppositeTeam = pieceToMove.team === 'black' ? 'white' : 'black';
-
-  const moves = pieceMoveRule.vectors.reduce<ValidMoveData[]>((accum, moveVector) => {
+  const validMoves = pieceMoveRule.vectors.reduce<ValidMoveData[]>((accum, moveVector) => {
     let keepChecking = true;
     let startingPosition = pieceToMove.position;
     let numberOfMoves = 0;
+
     do {
       const squareToMoveTo = applyVector(startingPosition, moveVector);
-
       const isVectorInsideBoard = checkIsVectorInsideBoard(squareToMoveTo);
       const isFriendlyPieceInSquare = checkIsPieceInSquare(squareToMoveTo, gameData.pieces[pieceToMove.team]);
       const isEnemyPieceInSquare = checkIsPieceInSquare(squareToMoveTo, gameData.pieces[oppositeTeam]);
 
-      if (isVectorInsideBoard && !isFriendlyPieceInSquare && !(pieceToMove.type === 'pawn' && isEnemyPieceInSquare)) {
+      // has to check for case where piece is a pawn as it can't take forwards
+      if (pieceToMove.type === 'pawn' && isEnemyPieceInSquare) {
+        numberOfMoves++;
+        keepChecking = false;
+      } else if (isVectorInsideBoard && !isFriendlyPieceInSquare) {
         accum.push({ position: squareToMoveTo, isEnemyPieceInSquare });
         startingPosition = squareToMoveTo;
         if (isEnemyPieceInSquare) {
@@ -123,40 +109,30 @@ function calculateValidMovesForPiece(
         numberOfMoves++;
         keepChecking = false;
       }
-
       numberOfMoves++;
     } while (
+      // if can move multiple, then keep checking
+      // handles special case for pawns where if they haven't moved they can make two steps
       (pieceMoveRule.canMoveMultiple && keepChecking) ||
       (pieceToMove.type === 'pawn' && !pieceToMove.hasMoved && numberOfMoves < 2)
     );
-
+    // handles case where pawn can take a piece diagonally
     if (pieceToMove.type === 'pawn') {
-      const takingMoves: [Vector, Vector] =
-        sideofBoard === 'bottom'
+      const pawnTakingMoves: [Vector, Vector] =
+        sideOfBoard === 'bottom'
           ? [createVector(1, -1), createVector(-1, -1)]
           : [createVector(1, 1), createVector(-1, 1)];
-
-      takingMoves.forEach(move => {
+      pawnTakingMoves.forEach(move => {
         const squareToMoveTo = applyVector(pieceToMove.position, move);
         const isVectorInsideBoard = checkIsVectorInsideBoard(squareToMoveTo);
         const isEnemyPieceInSquare = checkIsPieceInSquare(squareToMoveTo, gameData.pieces[oppositeTeam]);
-
         if (isVectorInsideBoard && isEnemyPieceInSquare) {
           accum.push({ position: squareToMoveTo, isEnemyPieceInSquare: true });
         }
       });
     }
-
     return accum;
   }, []);
 
-  return moves;
-}
-
-function checkIsVectorInsideBoard({ x, y }: Vector): boolean {
-  return x >= 1 && x <= 8 && y >= 1 && y <= 8;
-}
-
-function checkIsPieceInSquare(squareToMoveTo: Vector, pieces: PieceData[]): boolean {
-  return !!pieces.find(piece => areVectorsEqual(squareToMoveTo, piece.position));
+  return validMoves;
 }

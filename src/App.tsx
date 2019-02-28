@@ -1,8 +1,17 @@
 import React, { FC, useState } from 'react';
-import { ChessBoard, PieceData, Teams } from './components/ChessBoard';
+import { ChessBoard, PieceData, Teams, SquareData } from './components/ChessBoard/ChessBoard';
 import styled from 'styled-components';
 import { createInitialPiecePositions } from './helpers/createInitialPiecePositions';
 import { Credit } from './components/Credit';
+import { ValidMoveData, calculateValidMoves } from './helpers/valid_moves/calculateValidMoves';
+import { SideOfBoard } from './types';
+
+export interface GameData {
+  pieces: { white: PieceData[]; black: PieceData[] };
+  currentPlayersTurn: Teams;
+  whiteSideOfBoard: SideOfBoard;
+  blackSideOfBoard: SideOfBoard;
+}
 
 const StyledApp = styled.div`
   display: flex;
@@ -34,20 +43,41 @@ const StyledFooter = styled.footer`
 `;
 
 const App: FC = props => {
-  const [whitePiecesData] = useState<PieceData[]>(createInitialPiecePositions('bottom', 'white'));
+  const whiteSideOfBoard: SideOfBoard = 'bottom';
+  const blackSideOfBoard: SideOfBoard = whiteSideOfBoard === 'bottom' ? 'top' : 'bottom';
 
-  const [blackPiecesData] = useState<PieceData[]>(createInitialPiecePositions('top', 'black'));
+  const [whitePiecesData] = useState<PieceData[]>(createInitialPiecePositions(whiteSideOfBoard, 'white'));
+
+  const [blackPiecesData] = useState<PieceData[]>(createInitialPiecePositions(blackSideOfBoard, 'black'));
 
   const [selectedPiece, setSelectedPiece] = useState<PieceData | undefined>(
-    whitePiecesData.find(piece => piece.type === 'knight') || whitePiecesData[0]
+    whitePiecesData.find(piece => piece.type === 'knight') || whitePiecesData[0],
   );
 
   const [currentPlayersTurn] = useState<Teams>('white');
 
-  const handleSetSelectedPiece = (newSelectedPiece: PieceData | undefined): void => {
-    if (newSelectedPiece && newSelectedPiece.team === currentPlayersTurn) {
-      setSelectedPiece(newSelectedPiece);
-    } else {
+  const gameData: GameData = {
+    pieces: { black: blackPiecesData, white: whitePiecesData },
+    currentPlayersTurn,
+    whiteSideOfBoard,
+    blackSideOfBoard,
+  };
+
+  const validMoves: ValidMoveData[] | undefined = selectedPiece
+    ? calculateValidMoves(selectedPiece, gameData)
+    : undefined;
+
+  // handleSetSelectedPiece(currentPlayersTurn);
+
+  const handleSquareclick = (squareData: SquareData): void => {
+    const { pieceData, isValidMoveSquare } = squareData;
+
+    if (pieceData && pieceData.team === currentPlayersTurn) {
+      setSelectedPiece(pieceData);
+      return;
+    }
+
+    if (selectedPiece && !isValidMoveSquare) {
       setSelectedPiece(undefined);
     }
   };
@@ -57,12 +87,10 @@ const App: FC = props => {
       <StyledAppMain>
         <p>Chess?</p>
         <ChessBoard
-          whitePieces={whitePiecesData}
-          blackPieces={blackPiecesData}
-          currentPlayersTurn={currentPlayersTurn}
-          whiteSideOfBoard='bottom'
+          gameData={gameData}
           selectedPiece={selectedPiece}
-          setSelectedPiece={handleSetSelectedPiece}
+          validMoves={validMoves}
+          handleSquareclick={handleSquareclick}
         />
       </StyledAppMain>
       <StyledFooter>

@@ -22,7 +22,7 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
-    "strictPropertyInitialization": true
+    "strictPropertyInitialization": true,
   },
   "include": [
     "src"
