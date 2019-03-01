@@ -1,4 +1,4 @@
-import React, { FC, useState, useRef, useEffect } from 'react';
+import React, { FC, useState, useRef } from 'react';
 import { ChessBoard, PieceData, Teams, SquareData } from './components/ChessBoard/ChessBoard';
 import styled from 'styled-components';
 import { createInitialPiecePositions } from './helpers/createInitialPiecePositions';
@@ -48,24 +48,24 @@ const StyledFooter = styled.footer`
 `;
 
 const App: FC = props => {
+  const calculateValidMovesRef = useRef<
+    ((selectedPiece: PieceData, gameData: GameData) => ValidMoveData[] | undefined) | null
+  >(createMemoizedCalculateValidMoves());
+
+  // If there isn't a memoized instance, then create one.
+  if (!calculateValidMovesRef.current) {
+    calculateValidMovesRef.current = createMemoizedCalculateValidMoves();
+  }
+
   const whiteSideOfBoard: SideOfBoard = 'bottom';
   const blackSideOfBoard: SideOfBoard = whiteSideOfBoard === 'bottom' ? 'top' : 'bottom';
-
-  const calculateValidMovesRef = useRef<(selectedPiece: PieceData, gameData: GameData) => ValidMoveData[] | undefined>(
-    createMemoizedCalculateValidMoves(),
-  );
 
   const [whitePiecesData] = useState<PieceData[]>(createInitialPiecePositions(whiteSideOfBoard, 'white'));
   const [blackPiecesData] = useState<PieceData[]>(createInitialPiecePositions(blackSideOfBoard, 'black'));
   const [selectedPiece, setSelectedPiece] = useState<PieceData | undefined>(
     whitePiecesData.find(piece => piece.type === 'knight'),
   );
-  const [currentPlayersTurn] = useState<Teams>('white');
-
-  // When current players turn changes, we want to recreate the memoized function.
-  useEffect(() => {
-    calculateValidMovesRef.current = createMemoizedCalculateValidMoves();
-  }, [currentPlayersTurn]);
+  const [currentPlayersTurn, setCurrentPlayersTurn] = useState<Teams>('white');
 
   const gameData: GameData = {
     pieces: { black: blackPiecesData, white: whitePiecesData },
@@ -89,10 +89,15 @@ const App: FC = props => {
     if (pieceData && pieceData.team === currentPlayersTurn) {
       setSelectedPiece(pieceData);
       return;
+    } else if (pieceData) {
+      changeTeamAndInvalidateCache();
+      setSelectedPiece(pieceData);
+      return;
     }
 
     if (selectedPiece && !isValidMoveSquare) {
       setSelectedPiece(undefined);
+      return;
     }
   };
 
@@ -112,6 +117,14 @@ const App: FC = props => {
       </StyledFooter>
     </StyledApp>
   );
+
+  function changeTeamAndInvalidateCache(): void {
+    console.debug('[changeTeamAndInvalidateCache]: Invalidated cache');
+    calculateValidMovesRef.current = null;
+    setCurrentPlayersTurn(prevPlayersTurn => {
+      return prevPlayersTurn === 'black' ? 'white' : 'black';
+    });
+  }
 };
 
 export default App;
