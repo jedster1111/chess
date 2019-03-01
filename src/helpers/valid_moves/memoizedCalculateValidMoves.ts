@@ -1,14 +1,19 @@
 import { PieceData } from '../../components/ChessBoard/ChessBoard';
 import { GameData, AlreadyCalculatedMoves } from '../../App';
-import { ValidMoveData, calculateValidMoves } from './calculateValidMoves';
+import { calculateValidMoves } from './calculateValidMoves';
 
-export function createMemoizedCalculateValidMoves(): (
-  selectedPiece: PieceData,
-  gameData: GameData,
-) => ValidMoveData[] | undefined {
-  const alreadyCalculatedMoves: AlreadyCalculatedMoves = {};
+export function createMemoizedCalculateValidMoves(): {
+  calculateValidMovesMemo: typeof calculateValidMoves;
+  clearValidMovesCache: () => void;
+} {
+  let alreadyCalculatedMoves: AlreadyCalculatedMoves = {};
 
-  return (selectedPiece, gameData) => {
+  function clearValidMovesCache() {
+    console.debug('[createMemoizedCalculateValidMoves] Cleared cache');
+    alreadyCalculatedMoves = {};
+  }
+
+  const calculateValidMovesMemo: typeof calculateValidMoves = (selectedPiece: PieceData, gameData: GameData) => {
     if (selectedPiece.team !== gameData.currentPlayersTurn) {
       return undefined;
     }
@@ -25,10 +30,11 @@ export function createMemoizedCalculateValidMoves(): (
 
       console.debug(`[calculateValidMovesMemoized] Calculated new moves ${memoizeKey}:`, calculatedMoves);
 
-      // setAlreadyCalculatedMoves({ ...alreadyCalculatedMoves, [memoizeKey]: calculatedMoves });
       alreadyCalculatedMoves[memoizeKey] = calculatedMoves;
 
       return calculatedMoves;
     }
   };
+
+  return { calculateValidMovesMemo, clearValidMovesCache };
 }

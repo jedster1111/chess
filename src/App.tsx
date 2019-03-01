@@ -6,12 +6,17 @@ import { Credit } from './components/Credit';
 import { ValidMoveData } from './helpers/valid_moves/calculateValidMoves';
 import { SideOfBoard } from './types';
 import { createMemoizedCalculateValidMoves } from './helpers/valid_moves/memoizedCalculateValidMoves';
+import { getOppositeSideOfBoard } from './helpers/getOppositeSideOfBoard';
 
 export interface GameData {
   pieces: { white: PieceData[]; black: PieceData[] };
   currentPlayersTurn: Teams;
   whiteSideOfBoard: SideOfBoard;
   blackSideOfBoard: SideOfBoard;
+}
+
+interface AppProps {
+  whiteSideOfBoard: SideOfBoard;
 }
 
 export interface AlreadyCalculatedMoves {
@@ -47,55 +52,46 @@ const StyledFooter = styled.footer`
   padding: 8px 0;
 `;
 
-const App: FC = props => {
-  const calculateValidMovesRef = useRef<
-    ((selectedPiece: PieceData, gameData: GameData) => ValidMoveData[] | undefined) | null
-  >(createMemoizedCalculateValidMoves());
+const App: FC<AppProps> = ({ whiteSideOfBoard }) => {
+  // Create memoized calculateValidMoves and callback to clear the cache
+  const calculateValidMovesMemoRef = useRef(createMemoizedCalculateValidMoves());
+  const { calculateValidMovesMemo, clearValidMovesCache } = calculateValidMovesMemoRef.current;
 
-  // If there isn't a memoized instance, then create one.
-  if (!calculateValidMovesRef.current) {
-    calculateValidMovesRef.current = createMemoizedCalculateValidMoves();
-  }
+  const blackSideOfBoard = getOppositeSideOfBoard(whiteSideOfBoard);
 
-  const whiteSideOfBoard: SideOfBoard = 'bottom';
-  const blackSideOfBoard: SideOfBoard = whiteSideOfBoard === 'bottom' ? 'top' : 'bottom';
+  const { pieces } = useChessPieces(whiteSideOfBoard);
 
-  const [whitePiecesData] = useState<PieceData[]>(createInitialPiecePositions(whiteSideOfBoard, 'white'));
-  const [blackPiecesData] = useState<PieceData[]>(createInitialPiecePositions(blackSideOfBoard, 'black'));
   const [selectedPiece, setSelectedPiece] = useState<PieceData | undefined>(
-    whitePiecesData.find(piece => piece.type === 'knight'),
+    pieces.white.find(piece => piece.type === 'knight'),
   );
   const [currentPlayersTurn, setCurrentPlayersTurn] = useState<Teams>('white');
 
   const gameData: GameData = {
-    pieces: { black: blackPiecesData, white: whitePiecesData },
+    pieces,
     currentPlayersTurn,
     whiteSideOfBoard,
     blackSideOfBoard,
   };
 
-  const validMoves: ValidMoveData[] | undefined =
-    selectedPiece && calculateValidMovesRef.current
-      ? calculateValidMovesRef.current(selectedPiece, gameData)
-      : undefined;
+  const validMoves: ValidMoveData[] | undefined = selectedPiece && calculateValidMovesMemo(selectedPiece, gameData);
 
   const handleSquareclick = (squareData: SquareData): void => {
     const { pieceData, isValidMoveSquare } = squareData;
 
-    if (pieceData === selectedPiece) {
+    const hasClickedOnAlreadySelectedPiece = pieceData === selectedPiece;
+    const hasClickedOnAFriendlyPiece = pieceData && pieceData.team === currentPlayersTurn;
+    const hasClickedOnANonValidMoveSquare = selectedPiece && !isValidMoveSquare;
+
+    if (hasClickedOnAlreadySelectedPiece) {
       return;
     }
 
-    if (pieceData && pieceData.team === currentPlayersTurn) {
-      setSelectedPiece(pieceData);
-      return;
-    } else if (pieceData) {
-      changeTeamAndInvalidateCache();
+    if (hasClickedOnAFriendlyPiece) {
       setSelectedPiece(pieceData);
       return;
     }
 
-    if (selectedPiece && !isValidMoveSquare) {
+    if (hasClickedOnANonValidMoveSquare) {
       setSelectedPiece(undefined);
       return;
     }
@@ -119,8 +115,7 @@ const App: FC = props => {
   );
 
   function changeTeamAndInvalidateCache(): void {
-    console.debug('[changeTeamAndInvalidateCache]: Invalidated cache');
-    calculateValidMovesRef.current = null;
+    clearValidMovesCache();
     setCurrentPlayersTurn(prevPlayersTurn => {
       return prevPlayersTurn === 'black' ? 'white' : 'black';
     });
@@ -128,3 +123,22 @@ const App: FC = props => {
 };
 
 export default App;
+
+function useChessPieces(
+  whiteSideOfBoard: SideOfBoard,
+): {
+  pieces: { black: PieceData[]; white: PieceData[] };
+  setPieces: { black: (pieceData: PieceData[]) => void; white: (pieceData: PieceData[]) => void };
+} {
+  const [whitePiecesData, setWhitePieceData] = useState<PieceData[]>(
+    createInitialPiecePositions(whiteSideOfBoard, 'white'),
+  );
+  const [blackPiecesData, setBlackPieceData] = useState<PieceData[]>(
+    createInitialPiecePositions(getOppositeSideOfBoard(whiteSideOfBoard), 'black'),
+  );
+
+  return {
+    pieces: { black: blackPiecesData, white: whitePiecesData },
+    setPieces: { black: setBlackPieceData, white: setWhitePieceData },
+  };
+}
