@@ -10,7 +10,8 @@
       "object-literal-sort-keys": false,
       "semicolon": [true, "always", "ignore-bound-class-methods"],
       "no-any": true,
-      "ordered-imports": false
+      "ordered-imports": false,
+      "no-console": false
     },
     "rulesDirectory": ["tslint-plugin-prettier"]
 }  

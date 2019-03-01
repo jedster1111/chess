@@ -1,16 +1,21 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useRef, useEffect } from 'react';
 import { ChessBoard, PieceData, Teams, SquareData } from './components/ChessBoard/ChessBoard';
 import styled from 'styled-components';
 import { createInitialPiecePositions } from './helpers/createInitialPiecePositions';
 import { Credit } from './components/Credit';
-import { ValidMoveData, calculateValidMoves } from './helpers/valid_moves/calculateValidMoves';
+import { ValidMoveData } from './helpers/valid_moves/calculateValidMoves';
 import { SideOfBoard } from './types';
+import { createMemoizedCalculateValidMoves } from './helpers/valid_moves/memoizedCalculateValidMoves';
 
 export interface GameData {
   pieces: { white: PieceData[]; black: PieceData[] };
   currentPlayersTurn: Teams;
   whiteSideOfBoard: SideOfBoard;
   blackSideOfBoard: SideOfBoard;
+}
+
+export interface AlreadyCalculatedMoves {
+  [key: string]: ValidMoveData[] | undefined;
 }
 
 const StyledApp = styled.div`
@@ -46,15 +51,21 @@ const App: FC = props => {
   const whiteSideOfBoard: SideOfBoard = 'bottom';
   const blackSideOfBoard: SideOfBoard = whiteSideOfBoard === 'bottom' ? 'top' : 'bottom';
 
-  const [whitePiecesData] = useState<PieceData[]>(createInitialPiecePositions(whiteSideOfBoard, 'white'));
-
-  const [blackPiecesData] = useState<PieceData[]>(createInitialPiecePositions(blackSideOfBoard, 'black'));
-
-  const [selectedPiece, setSelectedPiece] = useState<PieceData | undefined>(
-    whitePiecesData.find(piece => piece.type === 'knight') || whitePiecesData[0],
+  const calculateValidMovesRef = useRef<(selectedPiece: PieceData, gameData: GameData) => ValidMoveData[] | undefined>(
+    createMemoizedCalculateValidMoves(),
   );
 
+  const [whitePiecesData] = useState<PieceData[]>(createInitialPiecePositions(whiteSideOfBoard, 'white'));
+  const [blackPiecesData] = useState<PieceData[]>(createInitialPiecePositions(blackSideOfBoard, 'black'));
+  const [selectedPiece, setSelectedPiece] = useState<PieceData | undefined>(
+    whitePiecesData.find(piece => piece.type === 'knight'),
+  );
   const [currentPlayersTurn] = useState<Teams>('white');
+
+  // When current players turn changes, we want to recreate the memoized function.
+  useEffect(() => {
+    calculateValidMovesRef.current = createMemoizedCalculateValidMoves();
+  }, [currentPlayersTurn]);
 
   const gameData: GameData = {
     pieces: { black: blackPiecesData, white: whitePiecesData },
@@ -63,14 +74,17 @@ const App: FC = props => {
     blackSideOfBoard,
   };
 
-  const validMoves: ValidMoveData[] | undefined = selectedPiece
-    ? calculateValidMoves(selectedPiece, gameData)
-    : undefined;
-
-  // handleSetSelectedPiece(currentPlayersTurn);
+  const validMoves: ValidMoveData[] | undefined =
+    selectedPiece && calculateValidMovesRef.current
+      ? calculateValidMovesRef.current(selectedPiece, gameData)
+      : undefined;
 
   const handleSquareclick = (squareData: SquareData): void => {
     const { pieceData, isValidMoveSquare } = squareData;
+
+    if (pieceData === selectedPiece) {
+      return;
+    }
 
     if (pieceData && pieceData.team === currentPlayersTurn) {
       setSelectedPiece(pieceData);
