@@ -16,9 +16,11 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --watchAll=false",
+    "test:watch": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint-project": "tslint --project . --fix"
+    "check-lint": "tslint --project .",
+    "lint": "tslint --project . --fix"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -31,10 +33,17 @@
   ],
   "devDependencies": {
     "@types/styled-components": "^4.1.10",
+    "husky": "^1.3.1",
     "prettier": "^1.16.4",
     "tslint": "^5.13.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-plugin-prettier": "^2.0.1",
     "tslint-react": "^3.6.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn check-lint",
+      "pre-push": "yarn check-lint && yarn test"
+    }
   }
 }
