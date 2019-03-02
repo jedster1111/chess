@@ -7,6 +7,9 @@ import { ValidMoveData } from './helpers/valid_moves/calculateValidMoves';
 import { SideOfBoard } from './types';
 import { createMemoizedCalculateValidMoves } from './helpers/valid_moves/memoizedCalculateValidMoves';
 import { getOppositeSideOfBoard } from './helpers/getOppositeSideOfBoard';
+import { calculateMovedPieces } from './helpers/movePieceToPosition';
+import { getOppositeTeam } from './helpers/getOppositeTeam';
+import { calculatePiecesWithRemoved } from './helpers/calculatePiecesWithRemoved';
 
 export interface GameData {
   pieces: { white: PieceData[]; black: PieceData[] };
@@ -59,7 +62,7 @@ const App: FC<AppProps> = ({ whiteSideOfBoard }) => {
 
   const blackSideOfBoard = getOppositeSideOfBoard(whiteSideOfBoard);
 
-  const { pieces } = useChessPieces(whiteSideOfBoard);
+  const { pieces, setPieces } = useChessPieces(whiteSideOfBoard);
 
   const [selectedPiece, setSelectedPiece] = useState<PieceData | undefined>(
     pieces.white.find(piece => piece.type === 'knight'),
@@ -75,25 +78,36 @@ const App: FC<AppProps> = ({ whiteSideOfBoard }) => {
 
   const validMoves: ValidMoveData[] | undefined = selectedPiece && calculateValidMovesMemo(selectedPiece, gameData);
 
-  const handleSquareclick = (squareData: SquareData): void => {
-    const { pieceData, isValidMoveSquare } = squareData;
+  const handleSquareclick = (clickedSquare: SquareData): void => {
+    const typeOfSquareClickAction = getTypeOfSquareClickAction(clickedSquare, currentPlayersTurn, selectedPiece);
+    const oppositeTeam = getOppositeTeam(currentPlayersTurn);
 
-    const hasClickedOnAlreadySelectedPiece = pieceData === selectedPiece;
-    const hasClickedOnAFriendlyPiece = pieceData && pieceData.team === currentPlayersTurn;
-    const hasClickedOnANonValidMoveSquare = selectedPiece && !isValidMoveSquare;
+    switch (typeOfSquareClickAction) {
+      case 'doNothing':
+        return;
 
-    if (hasClickedOnAlreadySelectedPiece) {
-      return;
-    }
+      case 'movePieceToSquare':
+        setPieces[currentPlayersTurn](calculateMovedPieces(pieces[currentPlayersTurn], selectedPiece!, clickedSquare));
+        setCurrentPlayersTurn(oppositeTeam);
+        setSelectedPiece(undefined);
+        clearValidMovesCache();
+        return;
 
-    if (hasClickedOnAFriendlyPiece) {
-      setSelectedPiece(pieceData);
-      return;
-    }
+      case 'takeEnemyPiece':
+        setPieces[currentPlayersTurn](calculateMovedPieces(pieces[currentPlayersTurn], selectedPiece!, clickedSquare));
+        setPieces[oppositeTeam](calculatePiecesWithRemoved(pieces[oppositeTeam], clickedSquare.pieceData!));
+        setCurrentPlayersTurn(getOppositeTeam(currentPlayersTurn));
+        setSelectedPiece(undefined);
+        clearValidMovesCache();
+        return;
 
-    if (hasClickedOnANonValidMoveSquare) {
-      setSelectedPiece(undefined);
-      return;
+      case 'changeSelectedPiece':
+        setSelectedPiece(clickedSquare.pieceData);
+        return;
+
+      case 'deselectPiece':
+        setSelectedPiece(undefined);
+        return;
     }
   };
 
@@ -113,13 +127,6 @@ const App: FC<AppProps> = ({ whiteSideOfBoard }) => {
       </StyledFooter>
     </StyledApp>
   );
-
-  function changeTeamAndInvalidateCache(): void {
-    clearValidMovesCache();
-    setCurrentPlayersTurn(prevPlayersTurn => {
-      return prevPlayersTurn === 'black' ? 'white' : 'black';
-    });
-  }
 };
 
 export default App;
@@ -141,4 +148,43 @@ function useChessPieces(
     pieces: { black: blackPiecesData, white: whitePiecesData },
     setPieces: { black: setBlackPieceData, white: setWhitePieceData },
   };
+}
+
+type SquareClickType = 'changeSelectedPiece' | 'deselectPiece' | 'movePieceToSquare' | 'takeEnemyPiece' | 'doNothing';
+
+function getTypeOfSquareClickAction(
+  clickedSquare: SquareData,
+  currentPlayersTurn: Teams,
+  selectedPiece: PieceData | undefined,
+): SquareClickType {
+  const { pieceData, isValidMoveSquare } = clickedSquare;
+
+  const hasClickedOnAlreadySelectedPiece = pieceData === selectedPiece;
+  const hasClickedOnAFriendlyPiece = pieceData && pieceData.team === currentPlayersTurn;
+  const hasClickedOnANonValidMoveSquare = selectedPiece && !isValidMoveSquare;
+  const hasClickedOnAValidMoveSquare = selectedPiece && isValidMoveSquare && !pieceData;
+  const hasClickedOnAnEnemyPiece =
+    selectedPiece && isValidMoveSquare && pieceData && pieceData.team !== currentPlayersTurn;
+
+  if (hasClickedOnAlreadySelectedPiece) {
+    return 'doNothing';
+  }
+
+  if (hasClickedOnAFriendlyPiece) {
+    return 'changeSelectedPiece';
+  }
+
+  if (hasClickedOnANonValidMoveSquare) {
+    return 'deselectPiece';
+  }
+
+  if (hasClickedOnAValidMoveSquare) {
+    return 'movePieceToSquare';
+  }
+
+  if (hasClickedOnAnEnemyPiece) {
+    return 'takeEnemyPiece';
+  }
+
+  return 'doNothing';
 }

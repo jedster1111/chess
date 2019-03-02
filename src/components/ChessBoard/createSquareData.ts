@@ -15,10 +15,15 @@ export function createSquareData(
     const firstSquareBgColor: Teams = y % 2 === 0 ? 'white' : 'black';
     for (let x = 0; x < width; x++) {
       const bgColor: Teams = x % 2 === 0 ? firstSquareBgColor : firstSquareBgColor === 'white' ? 'black' : 'white';
-      const isSelectedSquare = selectedPiece
-        ? areVectorsEqual(createVector(x + 1, y + 1), selectedPiece.position)
-        : false;
-      row.push({ bgColor, isValidMoveSquare: false, isSelectedSquare, isEnemyPieceInSquare: false });
+      const squarePosition = createVector(x + 1, y + 1);
+      const isSelectedSquare = selectedPiece ? areVectorsEqual(squarePosition, selectedPiece.position) : false;
+      row.push({
+        bgColor,
+        isValidMoveSquare: false,
+        isSelectedSquare,
+        isEnemyPieceInSquare: false,
+        position: squarePosition,
+      });
     }
     squares.push(row);
   }

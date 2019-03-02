@@ -20,6 +20,7 @@ export interface SquareData {
   isValidMoveSquare: boolean;
   isEnemyPieceInSquare: boolean;
   isSelectedSquare: boolean;
+  position: Vector;
 }
 
 interface ChessBoardProps {
