@@ -16,7 +16,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --watchAll=false",
+    "test": "CI=true react-scripts test --env=jsdom",
     "test:watch": "react-scripts test",
     "eject": "react-scripts eject",
     "check-lint": "tslint --project .",
@@ -42,8 +42,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn check-lint",
-      "pre-push": "yarn check-lint && yarn test"
+      "pre-commit": "yarn && yarn check-lint",
+      "pre-push": "yarn && yarn check-lint && yarn test"
     }
   }
 }
